@@ -2,7 +2,7 @@
 
 (defn code-by-pos [program pos]
   (let [param-pointer (get program pos)]
-       (get program param-pointer)))
+    (get program param-pointer)))
 
 (defn evaluate-instruction [opcode-pos opcode-fn program]
   (let [a (code-by-pos program (+ 1 opcode-pos))
@@ -10,7 +10,7 @@
         result-pos (get program (+ 3 opcode-pos))]
     (assoc program result-pos (opcode-fn a b))))
 
-(defn evaluate [program]
+(defn execute [program]
   (loop [code-pos 0
          p program]
     (let [code (get p code-pos)]
@@ -31,7 +31,7 @@
          verb-end 99]
     (let [guess-verb (quot (+ verb-start verb-end) 2) ; binary search
           p (update-noun-and-verb program noun guess-verb)
-          guess-result (get (evaluate p) 0)]
+          guess-result (get (execute p) 0)]
       (cond
         (= guess-result sentinel) {:noun noun :verb guess-verb}
         (>= guess-verb 99) (recur (inc noun) 0 99)
@@ -41,7 +41,7 @@
 (defn part1 [data]
   (-> data
       (update-noun-and-verb 12 2)
-      evaluate
+      execute
       (get 0)))
 
 (defn part2 [data]
