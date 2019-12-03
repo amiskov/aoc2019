@@ -10,45 +10,33 @@
 (defn str->line [s]
   (mapv str->step (str/split s #",")))
 
-(defn go-right [point steps]
-  (let [x1 (:x point)
-        y1 (:y point)
-        x2 (+ x1 steps)]
-    (for [xs (range (inc x1) (inc x2))
-          ys [y1]]
-      [xs ys])))
-
-(defn go-left [point steps]
-  (let [x1 (:x point)
-        y1 (:y point)
-        x2 (- x1 steps)]
-    (for [xs (range (dec x1) (dec x2) -1)
-          ys [y1]]
-      [xs ys])))
-
-(defn go-up [point steps]
-  (let [x1 (:x point)
-        y1 (:y point)
-        y2 (+ y1 steps)]
-    (for [xs [x1]
-          ys (range (inc y1) (inc y2))]
-      [xs ys])))
-
-(defn go-down [point steps]
-  (let [x1 (:x point)
-        y1 (:y point)
-        y2 (- y1 steps)]
-    (for [xs [x1]
-          ys (range (dec y1) (dec y2) -1)]
-      [xs ys])))
-
-(defn make-step [point {dir :dir len :len}]
-  (-> (cond
-        (= dir \U) (go-up point len)
-        (= dir \D) (go-down point len)
-        (= dir \R) (go-right point len)
-        (= dir \L) (go-left point len))
+(defn ranges->coords [x-range y-range]
+  (-> (for [xs x-range
+            ys y-range]
+        [xs ys])
       vec))
+
+(defmulti go (fn [dir & _] dir))
+
+(defmethod go \R [_ x1 y1 steps]
+  (let [x2 (+ x1 steps)]
+    (ranges->coords (range (inc x1) (inc x2))
+                    [y1])))
+
+(defmethod go \L [_ x1 y1 steps]
+  (let [x2 (- x1 steps)]
+    (ranges->coords (range (dec x1) (dec x2) -1)
+                    [y1])))
+
+(defmethod go \U [_ x1 y1 steps]
+  (let [y2 (+ y1 steps)]
+    (ranges->coords [x1]
+                    (range (inc y1) (inc y2)))))
+
+(defmethod go \D [_ x1 y1 steps]
+  (let [y2 (- y1 steps)]
+    (ranges->coords [x1]
+                    (range (dec y1) (dec y2) -1))))
 
 (defn all-coords [line-str]
   (loop [steps (str->line line-str)
@@ -57,9 +45,11 @@
     (if (empty? steps)
       acc
       (let [f (first steps)
-            step-coords (make-step point f)
+            step-coords (go (:dir f) (:x point) (:y point) (:len f))
             last-point (last step-coords)]
-        (recur (rest steps) (into [] (concat acc step-coords)) {:x (first last-point) :y (last last-point)})))))
+        (recur (rest steps)
+               (into [] (concat acc step-coords))
+               {:x (first last-point) :y (last last-point)})))))
 
 (defn find-equal-coords [c1 c2]
   (let [s1 (set c1)
