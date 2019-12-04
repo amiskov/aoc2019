@@ -10,9 +10,9 @@
        rseq))
 
 (defn password?
-  "Checks password criteria. n must be 6 digits long."
-  [n]
-  (loop [digits (num->digits n)
+  "Checks part 1 criteria (p must be 6 digits long)"
+  [p]
+  (loop [digits (num->digits p)
          prev nil
          has-adjacent false]
     (if (empty? digits)
@@ -24,8 +24,10 @@
           (= cur prev) (recur (rest digits) cur true)
           :else (recur (rest digits) cur has-adjacent))))))
 
-(defn password?-ext [n]
-  (let [matches (re-seq #"(\d)\1+" (str n)) ; e.g (["333" "3"] ["22" "2"])
+(defn password?-ext
+  "Checks part 2 criteria (p must already satisfy part 1 criteria)"
+  [p]
+  (let [matches (re-seq #"(\d)\1+" (str p)) ; e.g (["333" "3"] ["22" "2"])
         digit-counts (map #(count (get % 0)) matches)] ; e.g. (3 2)
     (seq (filter #(= 2 %) digit-counts))))
 
