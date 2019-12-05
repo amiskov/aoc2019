@@ -17,6 +17,6 @@
 
 (deftest pos-to-value-test
   (testing ""
-    (is (= (d/pos->value [1002 4 3 4 33] 1 1) 4))
-    (is (= (d/pos->value [1002 4 3 4 33] 1 0) 33))
-    (is (= (d/pos->value [3 3 1107 8 8 3 4 3 99] 4 1) 8))))
+    (is (= (d/pos->val [1002 4 3 4 33] 1 1) 4))
+    (is (= (d/pos->val [1002 4 3 4 33] 1 0) 33))
+    (is (= (d/pos->val [3 3 1107 8 8 3 4 3 99] 4 1) 8))))
