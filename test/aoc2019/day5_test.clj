@@ -1,6 +1,5 @@
 (ns aoc2019.day5-test
   (:require [clojure.test :refer :all]
-            [clojure.string :as str]
             [aoc2019.utils :as u]
             [aoc2019.day5 :as d]))
 
@@ -8,13 +7,13 @@
 
 (deftest part1-test
   (testing ""
-    (is (= (d/part1 data)
-           3058646))))
+    (is (= (last (d/execute {:pos 0 :program data :input 1 :halt false :out []}))
+           6731945))))
 
 (deftest part2-test
-  (testing "check `100 * noun + verb` expression"
-    (is (= (d/part2 data)
-           8976))))
+  (testing ""
+    (is (= (last (d/execute {:pos 0 :program data :input 5 :out []}))
+           9571668))))
 
 (deftest pos-to-value-test
   (testing ""
