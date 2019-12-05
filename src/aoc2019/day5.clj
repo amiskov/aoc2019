@@ -1,5 +1,9 @@
 (ns aoc2019.day5
-  (:require [aoc2019.utils :as u]))
+  (:require 
+   [aoc2019.utils :as u]
+   [clojure.tools.trace :as t]))
+   
+
 
 (defn num->digits
   "Returns sequence of digits of n"
@@ -29,6 +33,7 @@
     [a b result-pos]))
 
 (defn parse-opcode-value [ocv]
+  (prn "ocv:" ocv)
   (if (= 99 ocv)
     {:opcode ocv :param-modes '(0 0 0 0)}
     (let [digits (num->digits ocv)
@@ -37,70 +42,82 @@
       {:opcode opcode
        :param-modes (pad 4 params-modes 0)})))
 
-(defn handle-1-and-2 [modes pos opcode-fn program]
-  (let [[a b result-pos] (take-params modes pos program)]
-    (assoc program result-pos (opcode-fn a b))))
+(defn handle-1 [data]
+  (let [{pos :pos prg :program} data
+        {modes :param-modes} (parse-opcode-value (prg pos))
+        [a b res-pos] (take-params modes pos prg)
+        res-val (+ a b)]
+    (conj data {:program (assoc prg res-pos res-val)
+                :pos (+ 4 pos)})))
 
-(defn handle-3 [pos program input]
-  (assoc program (program (inc pos)) input))
+(defn handle-2 [{pos :pos prg :program}]
+  (let [{modes :param-modes} (parse-opcode-value (prg pos))
+        [a b res-pos] (take-params modes pos prg)
+        res-val (* a b)]
+    {:program (assoc prg res-pos res-val) :pos (+ 4 pos)}))
 
-(defn handle-4 [modes pos program]
-  (let [value (pos->value program (+ 1 pos) (first modes))]
-    (prn "Output: " value)
-    program))
+(defn handle-3 [{pos :pos prg :program input :input}]
+  {:program (assoc prg (prg (inc pos)) input) :pos (+ 2 pos)})
 
-(defn handle-5
-  "Returns the next position"
-  [modes pos program]
-  (let [a (pos->value program (+ 1 pos) (first modes))
-        b (pos->value program (+ 2 pos) (second modes))]
-    (if (= a 0)
-      (+ pos 3)
-      b)))
+(defn handle-4 [{pos :pos prg :program out :out}]
+  (let [{modes :param-modes} (parse-opcode-value (prg pos))
+        a (pos->value prg (+ 1 pos) (first modes))]
+    {:out (conj out a) :pos (+ 2 pos)}))
 
-(defn handle-6
-  "Returns the next position"
-  [modes pos program]
-  (let [a (pos->value program (+ 1 pos) (first modes))
-        b (pos->value program (+ 2 pos) (second modes))]
-    (if (= a 0)
-      b
-      (+ 3 pos))))
+(defn handle-5 [{pos :pos prg :program}]
+  (let [{modes :param-modes} (parse-opcode-value (prg pos))
+        a (pos->value prg (+ 1 pos) (first modes))
+        b (pos->value prg (+ 2 pos) (second modes))
+        res-pos (if (= a 0) (+ pos 3) b)]
+    {:pos res-pos}))
 
-(defn handle-7 [modes pos program]
-  (let [a (pos->value program (+ 1 pos) (first modes))
-        b (pos->value program (+ 2 pos) (second modes))
-        res-pos (program (+ 3 pos))
+(defn handle-6 [{pos :pos prg :program}]
+  (let [{modes :param-modes} (parse-opcode-value (prg pos))
+        a (pos->value prg (+ 1 pos) (first modes))
+        b (pos->value prg (+ 2 pos) (second modes))
+        res-pos (if (= a 0) b (+ 3 pos))]
+    {:pos res-pos}))
+
+(defn handle-7 [{pos :pos prg :program}]
+  (let [{modes :param-modes} (parse-opcode-value (prg pos))
+        a (pos->value prg (+ 1 pos) (first modes))
+        b (pos->value prg (+ 2 pos) (second modes))
+        res-pos (prg (+ 3 pos))
         res-val (if (< a b) 1 0)]
-    (assoc program res-pos res-val)))
+    {:program (assoc prg res-pos res-val) :pos (+ 4 pos)}))
 
-(defn handle-8 [modes pos program]
-  (let [a (pos->value program (+ 1 pos) (first modes))
-        b (pos->value program (+ 2 pos) (second modes))
-        res-pos (program (+ 3 pos))
+(defn handle-8 [{pos :pos prg :program}]
+  (let [{modes :param-modes} (parse-opcode-value (prg pos))
+        a (pos->value prg (+ 1 pos) (first modes))
+        b (pos->value prg (+ 2 pos) (second modes))
+        res-pos (prg (+ 3 pos))
         res-val (if (= a b) 1 0)]
-    (assoc program res-pos res-val)))
+    {:program (assoc prg res-pos res-val) :pos (+ 4 pos)}))
 
-(defn execute [program initial-input]
-  (loop [cur-pos 0
-         p program]
-    (let [{opcode :opcode params-modes :param-modes} (parse-opcode-value (p cur-pos))]
-      (cond
-        (= opcode 99) p
-        (= opcode 1) (recur (+ cur-pos 4) (handle-1-and-2 params-modes cur-pos + p))
-        (= opcode 2) (recur (+ cur-pos 4) (handle-1-and-2 params-modes cur-pos * p))
-        (= opcode 3) (recur (+ cur-pos 2) (handle-3 cur-pos p initial-input))
-        (= opcode 4) (recur (+ cur-pos 2) (handle-4 params-modes cur-pos p))
-        (= opcode 5) (recur (handle-5 params-modes cur-pos p) p)
-        (= opcode 6) (recur (handle-6 params-modes cur-pos p) p)
-        (= opcode 7) (recur (+ cur-pos 4) (handle-7 params-modes cur-pos p))
-        (= opcode 8) (recur (+ cur-pos 4) (handle-8 params-modes cur-pos p))
-        :else (str "Something went wrong " p "; " opcode "; " cur-pos)))))
+(defn opcode->opcode-fn [opcode]
+  (case opcode
+    1 handle-1
+    2 handle-2
+    3 handle-3
+    4 handle-4
+    5 handle-5
+    6 handle-6
+    7 handle-7
+    8 handle-8
+    (fn [n] (str "Something went wrong for opcode " opcode))))
+
+(defn execute [data counter]
+  (let [{pos :pos p :program} data
+        {opcode :opcode} (parse-opcode-value (p pos))]
+    (if (= 99 opcode)
+      (:out data)
+      (let [opcode-fn (opcode->opcode-fn opcode)]
+        (execute (conj data (opcode-fn data)) (inc counter))))))
 
 (def data (u/file->intcode "day5.txt"))
 
 ; Must output 6731945 to console
-(execute data 1)
+(execute {:pos 0 :program data :input 1 :out []} 0)
 
 ; Must output 9571668 in console
-(execute data 5)
+(execute {:pos 0 :program data :input 5 :out []} 0)
