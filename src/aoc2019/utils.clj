@@ -6,3 +6,10 @@
   (->> (slurp (str "resources/" file))
        str/split-lines
        (map data-transformer)))
+
+(defn file->intcode [file]
+  (mapv #(Integer/parseInt %)
+        (-> (str "resources/" file)
+            (slurp)
+            (str/trim)
+            (str/split #","))))
