@@ -5,5 +5,6 @@
             :url "https://www.eclipse.org/legal/epl-2.0/"}
   :dependencies [[org.clojure/clojure "1.10.0"]
                  [ubergraph "0.8.1"]
+                 [org.clojure/math.combinatorics "0.1.6"]
                  [org.clojure/tools.trace "0.7.10"]]
   :repl-options {:init-ns aoc2019.core})

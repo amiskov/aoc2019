@@ -77,8 +77,9 @@
 
 (defmethod evaluate 99 [_] {:halt true})
 
+;; data is a map: {:pos 0 :program intcode-program :input <INPUT-VALUE> :halt false :out []}
 (defn execute [data]
   (let [upd (evaluate data)]
     (if (:halt upd)
-      (:out data)
+      (conj data upd)
       (execute (conj data upd)))))
