@@ -5,6 +5,7 @@
             [aoc2019.day5 :as d5]))
 
 (defmethod d5/evaluate 3 [{pos :pos prg :program input :input}]
+  (prn "3:"(assoc prg (prg (inc pos)) (first input)))
   {:program (assoc prg (prg (inc pos)) (first input))
    :input (rest input)
    :pos (+ 2 pos)})
@@ -18,10 +19,13 @@
 
 (defn run-amps-once [intcode phases]
   (reduce
-   (fn [inp phase]
-     (last (:out (d5/execute (prepare-memory intcode inp phase)))))
+   (fn [input-from-prev-out phase]
+     (prn (prepare-memory intcode input-from-prev-out phase))
+     (last (:out (d5/execute (prepare-memory intcode input-from-prev-out phase)))))
    0
    phases))
+
+(run-amps-once [3,15,3,16,1002,16,10,16,1,16,15,15,4,15,99,0,0] [4 3 2 1 0])
 
 (defn part1 [intcode]
   (reduce max (map

@@ -79,7 +79,9 @@
 
 ;; data is a map: {:pos 0 :program intcode-program :input <INPUT-VALUE> :halt false :out []}
 (defn execute [data]
-  (let [upd (evaluate data)]
+  (let [upd (evaluate data)
+        new-data (conj data upd)]
+    (prn "execute:" new-data)
     (if (:halt upd)
-      (conj data upd)
-      (execute (conj data upd)))))
+      new-data
+      (execute new-data))))
