@@ -48,12 +48,12 @@
     1 "░"))
 
 (defn digits->img [digits width height]
-  (->>  digits
-        (split-to-layers width height)
-        (process-layers [])
-        (map digit->colorbox)
-        (partition width)
-        (map #(str/join %))))
+  (->> digits
+       (split-to-layers width height)
+       (process-layers [])
+       (map digit->colorbox)
+       (partition width)
+       (map #(str/join %))))
 
 (defn part2 [digits]
   (digits->img digits 25 6))
