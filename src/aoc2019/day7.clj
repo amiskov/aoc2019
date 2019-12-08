@@ -5,10 +5,12 @@
             [aoc2019.day5 :as d5]))
 
 (defmethod d5/evaluate 3 [{pos :pos prg :program input :input}]
-  (prn "3:"(assoc prg (prg (inc pos)) (first input)))
-  {:program (assoc prg (prg (inc pos)) (first input))
-   :input (rest input)
-   :pos (+ 2 pos)})
+  (if (empty? input)
+    {:pause (empty? input)
+     :halt true}
+    {:program (assoc prg (prg (inc pos)) (first input))
+     :input (rest input)
+     :pos (+ 2 pos)}))
 
 (defn prepare-memory [intcode input phase]
   {:pos 0
@@ -20,12 +22,56 @@
 (defn run-amps-once [intcode phases]
   (reduce
    (fn [input-from-prev-out phase]
-     (prn (prepare-memory intcode input-from-prev-out phase))
+     ;(prn (prepare-memory intcode input-from-prev-out phase))
      (last (:out (d5/execute (prepare-memory intcode input-from-prev-out phase)))))
    0
    phases))
 
 (run-amps-once [3,15,3,16,1002,16,10,16,1,16,15,15,4,15,99,0,0] [4 3 2 1 0])
+
+;  ^^^ Don't touch code above, it works!
+
+(defmethod d5/evaluate 3 [{pos :pos prg :program input :input}]
+  (if (empty? input)
+    {:pause (empty? input) }
+    {:program (assoc prg (prg (inc pos)) (first input))
+     :input (rest input)
+     :pos (+ 2 pos)}))
+
+(defn prepare-memory-for-loop [data]
+  {:pos 0
+   :input []
+   :out []})
+
+(defn upd-input [data phase]
+  (let [cur-input (:input data)]
+    (if (:first data)
+      {:input (into [] (concat [phase] cur-input))}
+      {:input (into [] (concat  [phase] (:out data)))})))
+
+(defn run-amps-loop [intcode phases]
+  (reduce
+   (fn [data phase]
+     (let [new-data (merge data (upd-input data phase))
+           executed (d5/execute new-data)
+           ]
+       (prn "executed:" executed)
+       executed))
+   {:pos 0
+    :input [0]
+    :first true
+    :halt false
+    :program intcode}
+   phases))
+;; Tests
+
+(def p2t1 [3,26,1001,26,-4,26,3,27,1002,27,2,27,1,27,26, 27,4,27,1001,28,-1,28,1005,28,6,99,0,0,5])
+
+(run-amps-loop p2t1 [9,8,7,6,5])
+; ans: 139629729, [9,8,7,6,5]
+
+
+
 
 (defn part1 [intcode]
   (reduce max (map
