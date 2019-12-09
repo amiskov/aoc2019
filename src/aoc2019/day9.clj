@@ -97,10 +97,11 @@
 ;; data is a map:
 ;; {:pos 0 :relative-base 0 :program intcode-program :input <INPUT-VALUE> :halt false :out []}
 (defn execute [data]
-  (let [upd (evaluate data)]
-    (if (:halt upd)
-      (conj data upd)
-      (execute (conj data upd)))))
+  (loop [data data]
+    (let [upd (evaluate data)]
+      (if (:halt data)
+        (conj data upd)
+        (recur (conj data upd))))))
 
 ; Fast and durty: prepare large memory with many zeroes
 (defn init-program [program limit]
@@ -111,13 +112,19 @@
 (defn run-program [intcode input]
   (execute {:pos 0
             :relative-base 0
-            :program (init-program intcode 10000)
+            :program (init-program intcode 1000)
             :input input
             :halt false
             :out []}))
 
 ; Part 1
 (= (-> (u/file->intcode "day9.txt")
-       (run-program  [1])
+       (run-program [1])
        :out
        last) 2682107844)
+
+; Part 2
+(= (-> (u/file->intcode "day9.txt")
+       (run-program [2])
+       :out
+       last) 34738)
