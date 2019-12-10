@@ -13,11 +13,14 @@
   (= ((field y) x) "#"))
 
 (defn find-all-coords
-  "Matrix with every possible coordinate of the field"
+  "Returns a vector with every possible coordinate of the field"
   [width height]
   (-> (for [xs (range 0 width)
             ys (range 0 height)]
-        [ys xs]) ; [[x1 y1] [x2 y1] ...]
+        (if (>= width height)
+          [xs ys]
+          [ys xs]
+          ))
       vec))
 
 ; Vector -> Set
@@ -25,6 +28,7 @@
   (set (filter #(asteroid? % field)
                (find-all-coords (get-width field)
                                 (get-height field)))))
+
 
 ; filename -> set of asteroids
 (defn file->asteroids [file]
@@ -119,3 +123,53 @@
 
 ; part 1
 (make-visibility-map (file->asteroids "day10.txt"))
+
+; part 2
+; 2 dots -> vector coords
+(defn vec-coords [[x1 y1] [x2 y2]]
+  [(- x2 x1) (- y2 y1)])
+
+(defn polar [pov target]
+  {:theta (- Math/PI (apply #(Math/atan2 %1 %2) (vec-coords pov target)))
+   :asteroid target})
+
+(def sample (vec (map #(str/split % #"")
+             (str/split
+              (->> (str "resources/day10_p2_ex.txt")
+                   slurp)
+              #"\n"))))
+
+(def sample-asteroids (find-all-asteroids sample))
+
+; find all visible from POV
+; sort them by :theta
+; add sorted to accumulator
+; remove them from visible asteroids
+; repeat till asteroids are empty
+
+(defn arrange-targets [pov asteroids acc counter]
+  (if (empty? asteroids)
+    acc
+    (let [visible (find-visible-for pov asteroids)
+          sorted-visible (vec (sort-by :theta < (map #(polar pov %) visible)))]
+      (arrange-targets pov
+                       (set/difference asteroids visible)
+                       (into [] (concat acc sorted-visible))
+                       (inc counter)))))
+
+(arrange-targets [8 3] (set/difference sample-asteroids #{[8 3]}) [] 0)
+
+(defn part2 [arranged-targets]
+  (arranged-targets 199))
+
+(part2 (arrange-targets [20 21]
+                        (set/difference (file->asteroids "day10.txt") #{[20 21]})
+                        []
+                        0))
+; multiply its X coordinate by 100 and then add its Y coordinate
+(+ (* 19 100) 19)
+
+; larger example
+(part2 (arrange-targets [11 13] (set/difference (file->asteroids "day10_11-13_210.txt") #{[11 13]}) [] 0))
+(+ (* 8 100) 2)
+
