@@ -30,8 +30,6 @@
       {:opcode opcode
        :modes (pad 4 modes 0)})))
 
-(test #'parse-instruction-head)
-
 (defn take-param
   "Returns parameter value according it's mode. Not for address to store a value."
   {:test #(do (assert (= (take-param 1 0 0 [1002, 2, 4, 0]) 4))
@@ -42,75 +40,47 @@
       0 (prg param)
       1 param)))
 
-(test #'take-param)
-
-(defn evaluate-binary-op
-  [{:keys [address program] :as memory} binary-fn]
-  (let [modes (:modes (parse-instruction-head (program address)))
-        a (take-param 1 address (first modes) program)
+(defn binary-op
+  [{:keys [address program] :as memory} modes binary-fn]
+  (let [a (take-param 1 address (first modes) program)
         b (take-param 2 address (second modes) program)
         addr (program (+ address 3))]
     (assoc memory
            :program (assoc program addr (binary-fn a b))
            :address (+ 4 address))))
 
-(defn evaluate-jump-op
-  [{:keys [address program] :as memory} next-addr-fn]
-  (let [modes (:modes (parse-instruction-head (program address)))
-        a (take-param 1 address (first modes) program)
-        b (take-param 2 address (second modes) program)]
-    (assoc memory
-           :address (next-addr-fn a b address))))
-
-(defmulti evaluate
-  (fn [{:keys [address program] :as memory}]
-    (:opcode (parse-instruction-head (program address)))))
-
-(defmethod evaluate 1
-  [memory]
-  (evaluate-binary-op memory +))
-
-(defmethod evaluate 2
-  [memory]
-  (evaluate-binary-op memory *))
-
-(defmethod evaluate 3
+(defn input-op
   [{:keys [address program input] :as memory}]
   (assoc memory
          :program (assoc program (program (inc address)) input)
          :address (+ 2 address)))
 
-(defmethod evaluate 4
-  [{:keys [address program out] :as memory}]
-  (let [modes (:modes (parse-instruction-head (program address)))
-        param (take-param 1 address (first modes) program)]
+(defn output-op
+  [{:keys [address program out] :as memory} modes]
+  (assoc memory
+         :out (concat out [(take-param 1 address (first modes) program)])
+         :address (+ 2 address)))
+
+(defn jump-op
+  [{:keys [address program] :as memory} modes next-addr-fn]
+  (let [a (take-param 1 address (first modes) program)
+        b (take-param 2 address (second modes) program)]
     (assoc memory
-           :out (concat out [param])
-           :address (+ 2 address))))
+           :address (next-addr-fn a b))))
 
-(defmethod evaluate 5
-  [memory]
-  (evaluate-jump-op memory
-                    (fn [a b address] (if (= a 0) (+ address 3) b))))
-
-(defmethod evaluate 6
-  [memory]
-  (evaluate-jump-op memory
-                    (fn [a b address] (if (= a 0) b (+ 3 address)))))
-
-(defmethod evaluate 7
-  [memory]
-  (evaluate-binary-op memory
-                      (fn [a b] (if (< a b) 1 0))))
-
-(defmethod evaluate 8
-  [memory]
-  (evaluate-binary-op memory
-                      (fn [a b] (if (= a b) 1 0))))
-
-(defmethod evaluate 99
-  [memory]
-  (assoc memory :halt true))
+(defn evaluate
+  [{:keys [program address] :as memory}]
+  (let [{oc :opcode modes :modes} (parse-instruction-head (program address))]
+    (case oc
+      1 (binary-op memory modes +)
+      2 (binary-op memory modes *)
+      3 (input-op memory)
+      4 (output-op memory modes)
+      5 (jump-op memory modes #(if (= %1 0) (+ address 3) %2))
+      6 (jump-op memory modes #(if (= %1 0) %2 (+ address 3)))
+      7 (binary-op memory modes #(if (< %1 %2) 1 0))
+      8 (binary-op memory modes #(if (= %1 %2) 1 0))
+      99 (assoc memory :halt true))))
 
 (defn execute [memory]
   (loop [m memory]
