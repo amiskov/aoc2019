@@ -1,3 +1,4 @@
+;; https://adventofcode.com/2019/day/10
 (ns aoc2019.day10
   (:require
    [clojure.string :as str]
@@ -19,8 +20,7 @@
             ys (range 0 height)]
         (if (>= width height)
           [xs ys]
-          [ys xs]
-          ))
+          [ys xs]))
       vec))
 
 ; Vector -> Set
@@ -134,10 +134,10 @@
    :asteroid target})
 
 (def sample (vec (map #(str/split % #"")
-             (str/split
-              (->> (str "resources/day10_p2_ex.txt")
-                   slurp)
-              #"\n"))))
+                      (str/split
+                       (->> (str "resources/day10_p2_ex.txt")
+                            slurp)
+                       #"\n"))))
 
 (def sample-asteroids (find-all-asteroids sample))
 

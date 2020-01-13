@@ -1,3 +1,4 @@
+;; https://adventofcode.com/2019/day/1
 (ns aoc2019.day1)
 
 (defn mass->fuel [mass]

@@ -1,3 +1,4 @@
+;; https://adventofcode.com/2019/day/6
 (ns aoc2019.day6
   (:require
    [ubergraph.alg :as alg]))

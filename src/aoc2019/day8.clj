@@ -1,3 +1,4 @@
+;; https://adventofcode.com/2019/day/8
 (ns aoc2019.day8
   (:require [clojure.string :as str]))
 
