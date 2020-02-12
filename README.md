@@ -1,5 +1,5 @@
 # Advent of Code 2019
-Problems solved with Clojure.
+Puzzles solved with Clojure.
 
 ## Run tests
 Run all tests:
